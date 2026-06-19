@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Game Result - SovoChess{% endblock %}
+
+{% block content %}
+
+<div style="max-width: 600px; margin: 0 auto; text-align: center;">
+
+    <!-- result banner -->
+    {% if user_won %}
+        <div style="background-color: #1a472a; border: 1px solid #2ecc71; padding: 30px; border-radius: 10px; margin-bottom: 30px;">
+            <h1 style="color: #2ecc71; font-size: 42px; margin-bottom: 5px;">Victory!</h1>
+            <p style="color: #aaaaaa;">You won the game</p>
+        </div>
+    {% else %}
+        <div style="background-color: #4a1a1a; border: 1px solid #e74c3c; padding: 30px; border-radius: 10px; margin-bottom: 30px;">
+            <h1 style="color: #e74c3c; font-size: 42px; margin-bottom: 5px;">Defeat</h1>
+            <p style="color: #aaaaaa;">You lost the game</p>
+        </div>
+    {% endif %}
+
+    <!-- game details -->
+    <div style="background-color: #1e1e2e; border: 1px solid #333; padding: 30px; border-radius: 10px; margin-bottom: 30px;">
+
+        <div style="margin-bottom: 20px;">
+            <p style="color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Opening Played</p>
+            <p style="color: #f0c040; font-size: 20px; margin-top: 5px;">{{ game.opening_name }}</p>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid #333; margin-bottom: 20px;">
+
+        <div style="margin-bottom: 20px;">
+    <p style="color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Winner</p>
+    <p style="color: #ffffff; font-size: 20px; margin-top: 5px;">
+        {% if game.winner %}{{ game.winner.username }}{% else %}Draw{% endif %}
+    </p>
+</div>
+
+        <hr style="border: none; border-top: 1px solid #333; margin-bottom: 20px;">
+
+        <div style="margin-bottom: 20px;">
+            <p style="color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Your Rating</p>
+            <p style="color: #f0c040; font-size: 28px; font-weight: bold; margin-top: 5px;">{{ request.user.current_rating }}</p>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid #333; margin-bottom: 20px;">
+
+        <div>
+            <p style="color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Moves Played</p>
+            <p style="color: #ffffff; font-size: 20px; margin-top: 5px;">{{ game.moves.count }}</p>
+        </div>
+
+    </div>
+
+    <!-- buttons -->
+    <div>
+        <a href="/game/start/">
+            <button style="padding: 14px 40px; background-color: #f0c040; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; margin-right: 15px; font-family: 'Times New Roman', serif;">
+                Play Again
+            </button>
+        </a>
+        <a href="/">
+            <button style="padding: 14px 40px; background-color: #1e1e2e; border: 1px solid #f0c040; color: white; border-radius: 6px; cursor: pointer; font-size: 16px; font-family: 'Times New Roman', serif;">
+                Home
+            </button>
+        </a>
+    </div>
+
+</div>
+
+{% endblock %}

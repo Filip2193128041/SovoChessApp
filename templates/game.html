@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Game - SovoChess{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'css/chessboard-1.0.0.min.css' %}">
+
+<div style="display: flex; justify-content: center; gap: 30px; align-items: flex-start; margin-top: 20px;">
+
+    <!--left side-->
+    <div style="flex-shrink: 0;">
+        <h2 style="color: #ffffff; margin-bottom: 15px; text-align: center; font-size: 22px; letter-spacing: 2px;">SovoChess — Game #{{ game.id }}</h2>
+        <div id="board" style="width: 620px;"></div>
+    </div>
+
+    <!--right side-->
+    <div style="background-color: #3e3e62; border: 1px solid #333; padding: 30px 25px; border-radius: 10px; min-width: 220px; margin-top: 50px;">
+
+        <!-- turn indicator -->
+        <div style="margin-bottom: 25px;">
+            <p style="color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Current Turn</p>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div id="turn-indicator" style="width: 18px; height: 18px; border-radius: 50%; background-color: white; border: 2px solid #555;"></div>
+                <strong id="turn" style="color: #ffffff; font-size: 18px;">White</strong>
+            </div>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid #333; margin-bottom: 25px;">
+
+        <!-- move counter -->
+        <div style="margin-bottom: 25px;">
+            <p style="color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Moves Played</p>
+            <strong id="move-count" style="color: #ffffff; font-size: 32px;">0</strong>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid #333; margin-bottom: 25px;">
+
+        <!--info for player  -->
+        <div style="margin-bottom: 25px;">
+            <p style="color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Playing as</p>
+            <strong style="color: #ffffff; font-size: 16px;">{{ request.user.username }}</strong>
+            <p style="color: #888; margin-top: 6px; font-size: 13px;">Rating: <span style="color: #f0c040; font-weight: bold;">{{ request.user.current_rating }}</span></p>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid #333; margin-bottom: 25px;">
+
+        <!-- status msg -->
+        <div id="status" style="color: #ff1700; font-weight: bold; min-height: 20px; font-size: 14px;"></div>
+
+        <!-- resign btn -->
+        <button onclick="resignGame()" style="margin-top: 20px; width: 100%; padding: 12px; background-color: #5b0000; border: none; border-radius: 6px; color: white; cursor: pointer; font-size: 14px; letter-spacing: 1px;">
+            Resign
+        </button>
+    </div>
+
+</div>
+
+<!--checkmate and stalemate -->
+<div id="checkmate-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:1000; justify-content:center; align-items:center;">
+    <div style="background-color: #1e1e2e; border: 1px solid #444; padding: 50px 40px; border-radius: 12px; text-align: center; min-width: 300px;">
+        <h2 id="checkmate-message" style="color: #f0c040; margin-bottom: 10px; font-size: 24px;"></h2>
+        <p id="opening-name" style="color: #aaaaaa; margin-bottom: 30px; font-size: 14px;"></p>
+        <a href="/">
+            <button style="padding: 12px 30px; background-color: #f0c040; border: none; border-radius: 6px; cursor: pointer; margin-right: 10px; font-weight: bold;">Home</button>
+        </a>
+        <a href="/game/start/">
+            <button style="padding: 12px 30px; background-color: #1e1e2e; border: 1px solid #f0c040; color: white; border-radius: 6px; cursor: pointer;">Play Again</button>
+        </a>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="{% static 'js/chessboard-1.0.0.min.js' %}"></script>
+<script>
+    var gameId = {{ game.id }};
+    var currentTurn = 'w';
+    var moveCount = 0;
+// the reload the pos
+    function reloadPosition() {
+        fetch('/game/' + gameId + '/position/')
+        .then(response => response.json())
+        .then(data => {
+            board.position(data.fen);
+        })
+    }
+// to show the checkmate and who won by checkmate + opening + the modal
+    function showCheckmateModal(winner, opening) {
+        document.getElementById('checkmate-message').innerText = winner + ' wins by checkmate!';
+        document.getElementById('opening-name').innerText = 'Opening played: ' + opening;
+        document.getElementById('checkmate-modal').style.display = 'flex';
+        setTimeout(function() {
+            window.location.href = '/game/' + gameId + '/result/';
+        }, 3000);
+    }
+//show the stalemate + opening + window
+    function showStalemateModal(opening) {
+        document.getElementById('checkmate-message').innerText = 'Stalemate! It\'s a draw!';
+        document.getElementById('opening-name').innerText = 'Opening played: ' + opening;
+        document.getElementById('checkmate-modal').style.display = 'flex';
+        setTimeout(function() {
+            window.location.href = '/game/' + gameId + '/result/';
+        }, 3000);
+    }
+// resign the game
+    function resignGame() {
+        if (confirm('Are you sure you want to resign?')) {
+            window.location.href = '/';
+        }
+    }
+// fetch the and for turns status and move count of player
+    function onDrop(source, target) {
+        fetch('/game/' + gameId + '/move/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 'from': source, 'to': target })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.valid) {
+                currentTurn = currentTurn === 'w' ? 'b' : 'w';
+                document.getElementById('turn').innerText = currentTurn === 'w' ? 'White' : 'Black';
+                document.getElementById('turn-indicator').style.backgroundColor = currentTurn === 'w' ? 'white' : 'black';
+                document.getElementById('status').innerText = '';
+                moveCount++;
+                document.getElementById('move-count').innerText = moveCount;
+
+                // reload position then check game state
+                fetch('/game/' + gameId + '/position/')
+                .then(response => response.json())
+                .then(posData => {
+                    board.position(posData.fen);
+                    if (data.checkmate) {
+                        showCheckmateModal(data.winner, data.opening);
+                    } else if (data.stalemate) {
+                        showStalemateModal(data.opening);
+                    }
+                })
+            } else {
+                document.getElementById('status').innerText = 'Invalid move!';
+                reloadPosition();
+            }
+        })
+    }
+
+    var board = Chessboard('board', {
+        position: 'start',
+        draggable: true,
+        pieceTheme: '/static/img/chesspieces/wikipedia/{piece}.png',
+        onDrop: onDrop
+    })
+</script>
+
+{% endblock %}

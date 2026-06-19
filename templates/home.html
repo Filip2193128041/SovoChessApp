@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - SovoChess {% endblock %}
+
+{% block content %}
+
+<!--shown after login, displays user info and options -->
+<div style="text-align: center; margin-bottom: 50px;">
+    <h1 style="color: #ffffff;">Welcome to SovoChess!</h1>
+    <p style="margin-top: 23px; color: #0255ff;">Filip Halas- Assignment 2</p>
+</div>
+
+{% if user.is_authenticated %}
+    <!--if the user is logged on show this-->
+    <div style="text-align: center; background-color: #1b65f8; padding: 30px; border-radius: 9px; max-width: 450px; margin: 0 auto;">
+        <h3>Hello, {{ user.username }}!</h3>
+        <p style="margin-top: 10px; color: #ffffff;">Current Rating: <strong style="color: #00c5ff;">{{ user.current_rating }}</strong></p>
+        <a href="{% url 'start_game' %}">
+            <button style="margin-top: 20px; padding: 25px 50px; background-color: #ffffff; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">
+                Play Chess
+            </button>
+        </a>
+    </div>
+
+{% else %}
+    <!-- user is not logged in=prompt them to register or login -->
+    <div style="text-align: center;">
+        <p style="color: #aaaaaa;">Please login or register to play!</p>
+        <div style="margin-top: 21px;">
+            <a href="{% url 'login' %}">
+                <button style="padding: 10px 30px; background-color: #00edff; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">Login</button>
+            </a>
+            <a href="{% url 'register' %}">
+                <button style="padding: 10px 30px; background-color: #3a5cb7; border: 1px solid #10c4fa; color: #fff3f3; border-radius: 4px; cursor: pointer;">Register</button>
+            </a>
+        </div>
+    </div>
+{% endif %}
+
+<!-- leaderboard shown to everyone -->
+<div style="max-width: 500px; margin: 40px auto 0 auto; background-color: #1e1e2e; border: 3px solid #333; border-radius: 10px; padding: 25px;">
+    <h3 style="color: #ffffff; margin-bottom: 20px; text-align: center; letter-spacing: 1px;">Leaderboard</h3>
+    <table style="width: 100%; border-collapse: collapse;">
+        <tr style="color: #ffffff; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">
+            <th style="text-align: left; padding-bottom: 10px;">#</th>
+            <th style="text-align: left; padding-bottom: 10px;">Player</th>
+            <th style="text-align: right; padding-bottom: 10px;">Rating</th>
+        </tr>
+        {% for player in top_players %}
+        <tr style="border-top: 1px solid #333;">
+            <td style="padding: 13px 0; color: #888;">{{ forloop.counter }}</td>
+            <td style="padding: 12px 0; color: #00edff;">{{ player.username }}</td>
+            <td style="padding: 10px 0; color: #ffffff; text-align: right; font-weight: bold;">{{ player.current_rating }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+{% endblock %}
